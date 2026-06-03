@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="NovaTrash/NovaTrash.csproj" />
+  <Project Path="NovaTrashAPI/NovaTrashAPI.csproj" />
+</Solution>
