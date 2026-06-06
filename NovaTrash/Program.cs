@@ -36,6 +36,8 @@ if (app.Environment.IsDevelopment())
     app.UseDeveloperExceptionPage();
 
 app.UseCors("DashboardPolicy");
+app.UseDefaultFiles();
+app.UseStaticFiles(); 
 app.UseAuthorization();
 app.MapControllers();
 

@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NovaTrash Dashboard</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f0; color: #1a1a1a; min-height: 100vh; }
+    .container { max-width: 960px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+    .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 12px; }
+    .header-left { display: flex; align-items: center; gap: 12px; }
+    .logo { width: 40px; height: 40px; background: #fff; border: 1px solid #e5e5e0; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #555; }
+    .header h1 { font-size: 20px; font-weight: 600; }
+    .header p  { font-size: 13px; color: #888; margin-top: 2px; }
+
+    .modebar { display: flex; align-items: center; gap: 8px; background: #fff; border: 1px solid #e5e5e0; border-radius: 10px; padding: 6px 12px; font-size: 12px; }
+    .live-dot { width: 8px; height: 8px; border-radius: 50%; background: #1D9E75; display: inline-block; margin-right: 4px; }
+    .live-dot.err    { background: #E24B4A; }
+    .live-dot.paused { background: #aaa; }
+    .mode-label { color: #555; font-size: 12px; }
+    .mbtn { font-size: 12px; padding: 4px 10px; border-radius: 8px; border: 1px solid #ddd; background: transparent; color: #555; cursor: pointer; }
+    .mbtn.active { background: #f5f5f0; color: #1a1a1a; border-color: #aaa; font-weight: 500; }
+    .mbtn:hover { background: #f0f0eb; }
+
+    .api-bar { display: flex; align-items: center; gap: 8px; background: #fff; border: 1px solid #e5e5e0; border-radius: 10px; padding: 10px 14px; margin-bottom: 1.25rem; flex-wrap: wrap; }
+    .api-bar label { font-size: 13px; color: #888; white-space: nowrap; }
+    .api-bar input { flex: 1; min-width: 200px; font-size: 13px; padding: 5px 10px; border: 1px solid #ddd; border-radius: 8px; background: #fafaf8; color: #1a1a1a; }
+    .api-bar input:focus { outline: 2px solid #378ADD; border-color: transparent; }
+    .connect-btn { font-size: 12px; padding: 5px 14px; border-radius: 8px; border: 1px solid #ddd; background: transparent; color: #1a1a1a; cursor: pointer; white-space: nowrap; }
+    .connect-btn:hover { background: #f0f0eb; }
+    .api-status { font-size: 12px; margin-left: auto; }
+    .api-status.ok   { color: #1D9E75; }
+    .api-status.err  { color: #E24B4A; }
+    .api-status.wait { color: #aaa; }
+
+    .next-bar { font-size: 12px; color: #aaa; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 6px; }
+
+    .summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 1.25rem; }
+    .sum-card { background: #fff; border: 1px solid #e5e5e0; border-radius: 10px; padding: 14px 16px; }
+    .sum-label { font-size: 12px; color: #888; margin-bottom: 4px; }
+    .sum-val { font-size: 24px; font-weight: 600; color: #1a1a1a; }
+    .sum-val.warn { color: #E24B4A; }
+
+    .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-bottom: 1.75rem; }
+    .bin-card { background: #fff; border: 1px solid #e5e5e0; border-radius: 12px; padding: 1.25rem; }
+    .bin-card.full { border: 2px solid #E24B4A; }
+    .bin-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+    .bin-title { display: flex; align-items: center; gap: 10px; }
+    .bin-icon { width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+    .bin-icon.kagit   { background: #E6F1FB; color: #185FA5; }
+    .bin-icon.plastik { background: #EAF3DE; color: #3B6D11; }
+    .bin-icon.cam     { background: #E1F5EE; color: #0F6E56; }
+    .bin-icon.metal   { background: #FAEEDA; color: #854F0B; }
+    .bin-name { font-size: 15px; font-weight: 500; }
+    .badge { font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; }
+    .badge.ok   { background: #EAF3DE; color: #3B6D11; }
+    .badge.dolu { background: #FCEBEB; color: #A32D2D; }
+
+    .metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 1rem; }
+    .metric { background: #f8f8f5; border-radius: 8px; padding: 10px 12px; }
+    .metric-lbl { font-size: 11px; color: #888; margin-bottom: 3px; }
+    .metric-val { font-size: 17px; font-weight: 600; color: #1a1a1a; font-family: 'Courier New', monospace; }
+    .metric-val.danger  { color: #E24B4A; }
+    .metric-val.success { color: #1D9E75; }
+
+    .sensor-bar { height: 8px; background: #f0f0eb; border-radius: 99px; overflow: hidden; margin-bottom: 6px; }
+    .sensor-bar-fill { height: 100%; border-radius: 99px; transition: width 0.5s; }
+    .fill-full  { background: #E24B4A; width: 100%; }
+    .fill-empty { background: #1D9E75; width: 12%; }
+    .bin-footer { font-size: 11px; color: #aaa; display: flex; justify-content: space-between; }
+
+    .section-title { font-size: 15px; font-weight: 600; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 6px; }
+    .toolbar { display: flex; align-items: center; gap: 8px; margin-bottom: 0.75rem; flex-wrap: wrap; }
+    .toolbar select { font-size: 13px; padding: 5px 10px; border: 1px solid #ddd; border-radius: 8px; background: #fff; color: #1a1a1a; }
+    .row-count { margin-left: auto; font-size: 12px; color: #aaa; }
+
+    .tbl-wrap { background: #fff; border: 1px solid #e5e5e0; border-radius: 12px; overflow: hidden; margin-bottom: 0.75rem; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; }
+    thead th { background: #f8f8f5; font-weight: 500; font-size: 12px; color: #888; padding: 10px 14px; text-align: left; border-bottom: 1px solid #e5e5e0; }
+    tbody tr { border-bottom: 1px solid #f0f0eb; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: #fafaf8; }
+    tbody td { padding: 9px 14px; vertical-align: middle; }
+    .col-ts  { width: 150px; }
+    .col-bin { width: 90px; }
+    .col-sen { width: 110px; }
+    .col-ag  { width: 110px; }
+    .col-dur { width: 80px; }
+
+    .kutu-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; vertical-align: middle; }
+    .dot-kagit   { background: #185FA5; }
+    .dot-plastik { background: #3B6D11; }
+    .dot-cam     { background: #0F6E56; }
+    .dot-metal   { background: #854F0B; }
+
+    .pager { display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: #888; margin-bottom: 2rem; }
+    .pager button { font-size: 12px; padding: 4px 12px; border: 1px solid #ddd; border-radius: 8px; background: #fff; cursor: pointer; color: #555; }
+    .pager button:hover:not(:disabled) { background: #f0f0eb; }
+    .pager button:disabled { opacity: 0.35; cursor: default; }
+
+    .ts-bar { font-size: 12px; color: #bbb; display: flex; align-items: center; gap: 5px; }
+    .empty-row td { text-align: center; padding: 2rem; color: #bbb; }
+
+    @keyframes fadeIn { from { background: #E6F1FB; } to { background: transparent; } }
+    .new-row { animation: fadeIn 1s ease; }
+
+    @media (max-width: 600px) {
+      .summary { grid-template-columns: repeat(2, 1fr); }
+      .grid    { grid-template-columns: 1fr; }
+      .modebar { display: none; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <div class="header-left">
+      <div class="logo"><i class="ti ti-recycle"></i></div>
+      <div>
+        <h1>NovaTrash Dashboard</h1>
+        <p>Akıllı atık yönetim sistemi — sensör izleme paneli</p>
+      </div>
+    </div>
+    <div class="modebar">
+      <span class="live-dot" id="live-dot"></span>
+      <span class="mode-label" id="mode-label">Bağlanıyor...</span>
+      <button class="mbtn active" id="btn-demo" onclick="setMode('demo')">Demo (3 dk)</button>
+      <button class="mbtn" id="btn-real" onclick="setMode('real')">Gerçek (30 dk)</button>
+      <button class="mbtn" id="btn-pause" onclick="togglePause()">
+        <i class="ti ti-player-pause"></i>
+      </button>
+    </div>
+  </div>
+
+  <div class="api-bar">
+    <i class="ti ti-plug" style="color:#aaa"></i>
+    <label for="api-url">API adresi:</label>
+    <input type="text" id="api-url" value="http://localhost:5120" />
+    <button class="connect-btn" onclick="reconnect()">Bağlan</button>
+    <span class="api-status wait" id="api-status">Bekleniyor...</span>
+  </div>
+
+  <div class="next-bar">
+    <i class="ti ti-clock"></i>
+    <span id="next-label">—</span>
+    <span style="margin-left:auto">Polling: 3 sn · FORMAT: STATUS:0/1 · WEIGHT:gram</span>
+  </div>
+
+  <div class="summary" id="summary"></div>
+  <div class="grid" id="bin-grid"></div>
+
+  <p class="section-title"><i class="ti ti-history"></i> Geçmiş kayıtlar</p>
+  <div class="toolbar">
+    <i class="ti ti-filter" style="color:#aaa"></i>
+    <select id="f-kutu"><option value="">Tüm kutular</option><option>Kağıt</option><option>Plastik</option><option>Cam</option><option>Metal</option></select>
+    <select id="f-durum"><option value="">Tüm durumlar</option><option value="dolu">Dolu</option><option value="bos">Boş</option></select>
+    <span class="row-count" id="row-count"></span>
+  </div>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr>
+        <th class="col-ts">Zaman</th>
+        <th class="col-bin">Kutu</th>
+        <th class="col-sen">Sensör</th>
+        <th class="col-ag">Ağırlık</th>
+        <th class="col-dur">Durum</th>
+      </tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+  <div class="pager">
+    <button id="btn-prev" onclick="changePage(-1)">← Önceki</button>
+    <span id="page-info"></span>
+    <button id="btn-next" onclick="changePage(1)">Sonraki →</button>
+  </div>
+  <p class="ts-bar"><i class="ti ti-clock"></i><span id="ts-label"></span></p>
+
+</div>
+<script>
+const PAGE_SIZE = 8;
+const POLL_MS   = 3000;
+const DEMO_MS   = 3 * 60 * 1000;
+const REAL_MS   = 30 * 60 * 1000;
+
+const BIN_META = {
+  kagit:   { name:'Kağıt',   icon:'ti-file',   cls:'kagit'   },
+  plastik: { name:'Plastik', icon:'ti-bottle', cls:'plastik' },
+  cam:     { name:'Cam',     icon:'ti-cup',    cls:'cam'     },
+  metal:   { name:'Metal',   icon:'ti-tool',   cls:'metal'   },
+};
+
+let latestData  = [];
+let historyData = [];
+let currentPage = 0;
+let mode        = 'demo';
+let paused      = false;
+let pollId      = null;
+let readingId   = null;
+let countdownId = null;
+let countdown   = 0;
+let apiBase     = 'http://localhost:5120';
+let useApi      = false;
+
+let demoState = [
+  { binId:'kagit',   binName:'Kağıt',   status:0, weightG:320,  timestamp: new Date() },
+  { binId:'plastik', binName:'Plastik', status:1, weightG:1450, timestamp: new Date() },
+  { binId:'cam',     binName:'Cam',     status:1, weightG:2100, timestamp: new Date() },
+  { binId:'metal',   binName:'Metal',   status:0, weightG:180,  timestamp: new Date() },
+];
+let demoHistory = [];
+
+function pad(n){ return String(n).padStart(2,'0'); }
+function fmtTs(d){
+  const dt = new Date(d);
+  if (isNaN(dt)) return '—';
+  return `${dt.getFullYear()}-${pad(dt.getMonth()+1)}-${pad(dt.getDate())} ${pad(dt.getHours())}:${pad(dt.getMinutes())}:${pad(dt.getSeconds())}`;
+}
+
+async function fetchLatest() {
+  const res = await fetch(`${apiBase}/api/sensor/latest`);
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  return res.json();
+}
+async function fetchHistory() {
+  const fk = document.getElementById('f-kutu').value;
+  const fd = document.getElementById('f-durum').value;
+  let url = `${apiBase}/api/sensor/history?limit=100`;
+  if (fk) url += `&binId=${fk.toLowerCase()}`;
+  if (fd) url += `&durum=${fd}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  return res.json();
+}
+
+async function pollApi() {
+  if (paused) return;
+  try {
+    const [latest, history] = await Promise.all([fetchLatest(), fetchHistory()]);
+    latestData  = latest;
+    historyData = history;
+    setStatus('ok', 'API bağlı');
+    renderAll();
+  } catch(e) {
+    setStatus('err', 'API bağlanamadı — demo aktif');
+    useApi = false;
+  }
+}
+
+function runDemo() {
+  if (paused) return;
+  const now = new Date();
+  demoState.forEach(s => {
+    if (Math.random() < 0.2) s.status = s.status === 1 ? 0 : 1;
+    s.weightG = Math.max(0, s.weightG + Math.round((Math.random() - 0.3) * 60));
+    s.timestamp = new Date(now);
+    demoHistory.unshift({ ...s, timestamp: new Date(now) });
+  });
+  if (demoHistory.length > 300) demoHistory = demoHistory.slice(0, 300);
+  latestData  = [...demoState];
+  historyData = getFilteredDemo();
+  currentPage = 0;
+  renderAll();
+}
+
+function getFilteredDemo() {
+  const fk = document.getElementById('f-kutu').value;
+  const fd = document.getElementById('f-durum').value;
+  return demoHistory.filter(r => {
+    if (fk && r.binName !== fk) return false;
+    if (fd === 'dolu' && r.status !== 1) return false;
+    if (fd === 'bos'  && r.status !== 0) return false;
+    return true;
+  });
+}
+
+function setStatus(type, msg) {
+  const el  = document.getElementById('api-status');
+  const dot = document.getElementById('live-dot');
+  el.className = 'api-status ' + type;
+  el.textContent = msg;
+  dot.className = 'live-dot' + (type==='err'?' err': paused?' paused':'');
+  document.getElementById('mode-label').textContent = paused ? 'Duraklatıldı' : (mode==='demo' ? 'Demo modu' : 'Gerçek mod');
+}
+
+function renderBins() {
+  const dolu   = latestData.filter(s => s.status === 1).length;
+  const bos    = latestData.filter(s => s.status === 0).length;
+  const totalG = latestData.reduce((a,s) => a + s.weightG, 0);
+  document.getElementById('summary').innerHTML = `
+    <div class="sum-card"><div class="sum-label"><i class="ti ti-box"></i> Toplam kutu</div><div class="sum-val">4</div></div>
+    <div class="sum-card"><div class="sum-label"><i class="ti ti-alert-triangle"></i> Dolu uyarısı</div><div class="sum-val ${dolu>0?'warn':''}">${dolu}</div></div>
+    <div class="sum-card"><div class="sum-label"><i class="ti ti-check"></i> Boş</div><div class="sum-val">${bos}</div></div>
+    <div class="sum-card"><div class="sum-label"><i class="ti ti-scale"></i> Toplam ağırlık</div><div class="sum-val">${totalG.toLocaleString('tr-TR')} g</div></div>
+  `;
+  const order = ['kagit','plastik','cam','metal'];
+  const sorted = order.map(id => latestData.find(r => r.binId === id) || { binId:id, binName: BIN_META[id].name, status:0, weightG:0 });
+  document.getElementById('bin-grid').innerHTML = sorted.map(s => {
+    const m = BIN_META[s.binId];
+    const isDolu = s.status === 1;
+    const ts = s.timestamp ? fmtTs(s.timestamp) : '—';
+    return `<div class="bin-card ${isDolu?'full':''}">
+      <div class="bin-head">
+        <div class="bin-title">
+          <div class="bin-icon ${m.cls}"><i class="ti ${m.icon}"></i></div>
+          <span class="bin-name">${s.binName}</span>
+        </div>
+        <span class="badge ${isDolu?'dolu':'ok'}">${isDolu?'Dolu':'Boş'}</span>
+      </div>
+      <div class="metrics">
+        <div class="metric"><div class="metric-lbl"><i class="ti ti-radar"></i> Kızılötesi</div><div class="metric-val ${isDolu?'danger':'success'}">STATUS:${s.status}</div></div>
+        <div class="metric"><div class="metric-lbl"><i class="ti ti-weight"></i> Ağırlık</div><div class="metric-val">WEIGHT:${s.weightG.toLocaleString('tr-TR')}</div></div>
+      </div>
+      <div class="sensor-bar"><div class="sensor-bar-fill ${isDolu?'fill-full':'fill-empty'}"></div></div>
+      <div class="bin-footer"><span>${isDolu?'Cisim algılandı — kutu dolu':'Cisim yok — kutu boş'}</span><span>${ts}</span></div>
+    </div>`;
+  }).join('');
+}
+
+function renderTable() {
+  const data = useApi ? historyData : getFilteredDemo();
+  const totalPages = Math.max(1, Math.ceil(data.length / PAGE_SIZE));
+  currentPage = Math.min(currentPage, totalPages - 1);
+  const page = data.slice(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE);
+  document.getElementById('row-count').textContent = `${data.length} kayıt`;
+  document.getElementById('page-info').textContent = `Sayfa ${currentPage+1} / ${totalPages}`;
+  document.getElementById('btn-prev').disabled = currentPage === 0;
+  document.getElementById('btn-next').disabled = currentPage >= totalPages - 1;
+  if (!page.length) {
+    document.getElementById('tbody').innerHTML = '<tr class="empty-row"><td colspan="5">Henüz kayıt yok.</td></tr>';
+    return;
+  }
+  document.getElementById('tbody').innerHTML = page.map((r,i) => {
+    const isDolu = r.status === 1;
+    return `<tr class="${i<4&&currentPage===0?'new-row':''}">
+      <td style="font-size:12px;color:#888;font-family:monospace">${fmtTs(r.timestamp)}</td>
+      <td><span class="kutu-dot dot-${r.binId}"></span>${r.binName}</td>
+      <td style="font-family:monospace;font-size:12px;color:${isDolu?'#E24B4A':'#1D9E75'}">STATUS:${r.status}</td>
+      <td style="font-family:monospace;font-size:12px">WEIGHT:${r.weightG.toLocaleString('tr-TR')}</td>
+      <td><span class="badge ${isDolu?'dolu':'ok'}">${isDolu?'Dolu':'Boş'}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+function renderAll() {
+  renderBins();
+  renderTable();
+  document.getElementById('ts-label').textContent = ' Son güncelleme: ' + fmtTs(new Date());
+}
+
+function startCountdown(ms) {
+  clearInterval(countdownId);
+  countdown = Math.round(ms / 1000);
+  countdownId = setInterval(() => {
+    if (paused) return;
+    countdown--;
+    const m = Math.floor(countdown/60), s = countdown%60;
+    document.getElementById('next-label').textContent = `Sonraki sensör okuması: ${m}:${pad(s)}`;
+    if (countdown <= 0) clearInterval(countdownId);
+  }, 1000);
+}
+
+async function reconnect() {
+  apiBase = document.getElementById('api-url').value.trim().replace(/\/$/,'');
+  setStatus('wait', 'Bağlanıyor...');
+  try {
+    latestData = await fetchLatest();
+    useApi = true;
+    setStatus('ok', 'API bağlı');
+    startPolling();
+  } catch(e) {
+    useApi = false;
+    setStatus('err', 'Bağlanamadı — demo aktif');
+    startDemoLoop();
+  }
+}
+
+function startPolling() {
+  clearInterval(pollId); clearInterval(readingId);
+  const readMs = mode==='demo' ? DEMO_MS : REAL_MS;
+  pollApi();
+  pollId    = setInterval(() => { if (!paused) pollApi(); }, POLL_MS);
+  startCountdown(readMs);
+  readingId = setInterval(() => { if (!paused) startCountdown(readMs); }, readMs);
+}
+
+function startDemoLoop() {
+  clearInterval(pollId); clearInterval(readingId);
+  const readMs = mode==='demo' ? DEMO_MS : REAL_MS;
+  runDemo();
+  startCountdown(readMs);
+  readingId = setInterval(() => { if (!paused) { runDemo(); startCountdown(readMs); } }, readMs);
+}
+
+function setMode(m) {
+  mode = m;
+  document.getElementById('btn-demo').className = 'mbtn'+(m==='demo'?' active':'');
+  document.getElementById('btn-real').className = 'mbtn'+(m==='real'?' active':'');
+  useApi ? startPolling() : startDemoLoop();
+}
+
+function togglePause() {
+  paused = !paused;
+  document.getElementById('btn-pause').innerHTML = paused
+    ? '<i class="ti ti-player-play"></i>'
+    : '<i class="ti ti-player-pause"></i>';
+  setStatus(paused?'wait':(useApi?'ok':'err'), paused?'Duraklatıldı':(useApi?'API bağlı':'Demo aktif'));
+}
+
+function changePage(dir) { currentPage += dir; renderTable(); }
+
+['f-kutu','f-durum'].forEach(id => {
+  document.getElementById(id).addEventListener('change', () => { currentPage=0; renderTable(); });
+});
+
+reconnect();
+</script>
+</body>
+</html>
