@@ -12,10 +12,10 @@
 #include <HTTPClient.h>
 
 // AYARLAR 
-const char* WIFI_SSID     = "AndroidAPB544";
-const char* WIFI_PASS     = "bnep4850";
-const char* SERVER_HOST   = "10.54.73.197";  // PC ipconfig IPv4
-const int   SERVER_PORT   = 5120;
+const char* WIFI_SSID     = "x";
+const char* WIFI_PASS     = "x";
+const char* SERVER_HOST   = "x";  // PC ipconfig IPv4
+const int   SERVER_PORT   = "x";
 
 const unsigned long PHOTO_MS        = 20000;  // 20 sn'de bir foto
 const unsigned long SENSOR_POST_MS  = 2000;
